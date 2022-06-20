@@ -18,85 +18,66 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class MainActivity extends AppCompatActivity {
 
-    TextView tvCases,
-            tvCritical,
-            tvActive,
-            tvDeaths,
-            tvTodayCases,
-            tvTodayDeaths;
+    TextView tvCases,tvRecovered,tvCritical,
+            tvActive,tvTodayCases,tvTodayDeaths;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        setComponents();
-        fetchApiDataUsingRetrofit();
+        FindID();
 
+        // Creating a method to fetch data using Retrofit2
+        fetchApiDataUsingRetrofit();
     }
 
-    private void fetchApiDataUsingRetrofit() {
+    private void FindID() {
+        tvCases = findViewById(R.id.tvCases);
+        tvRecovered = findViewById(R.id.tvRecovered);
+        tvCritical = findViewById(R.id.tvCritical);
+        tvActive = findViewById(R.id.tvActive);
+        tvTodayCases = findViewById(R.id.tvTodayCases);
+        tvTodayDeaths = findViewById(R.id.tvTodayDeaths);
+    }
 
-        String baseURL = "https://disease.sh/v2/";
+    public void fetchApiDataUsingRetrofit() {
 
+        // Set up the Retrofit
+        // https://disease.sh/v3/covid-19/all
+        String baseUrl = "https://corona.lmao.ninja/v2/";
         Gson gson = new GsonBuilder().setLenient().create();
+        // Create a Retrofit builder and pass the gson in
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(baseUrl)
+                .addConverterFactory(GsonConverterFactory.create(gson))
+                .build();
 
-        Retrofit retrofit = new Retrofit.Builder().baseUrl(baseURL).addConverterFactory(GsonConverterFactory.create(gson)).build();
+        // Implement the Retrofit Client interface function
+        RetrofitApi retrofitApi = retrofit.create(RetrofitApi.class);
 
-        //implement retrofit client interface fucntion
-        RetrofitApi retrofitAPI = retrofit.create(RetrofitApi.class);
+        Call<Statistics> statisticsCall = retrofitApi.getStatistics();
 
-        Call<Statistics> statisticsCall = retrofitAPI.getStatistics();
-
-        /*IMPORTANT PART*/
-        statisticsCall.enqueue(new Callback<Statistics>() {
+        statisticsCall.enqueue(new Callback<Statistics>(){
+            // success
             @Override
             public void onResponse(Call<Statistics> call, Response<Statistics> response) {
-
-                //bind the data from API to the view
-                tvCases.setText(
-                        response.body().getCases().toString());
-                tvTodayCases.setText(
-                        response.body().getTodayCases().toString());
-
-                tvDeaths.setText(response.body().getDeaths().toString());
-
-                tvCritical.setText(
-                        response.body().getCritical().toString());
-                tvActive.setText(
-                        response.body().getActive().toString());
-
-                tvTodayDeaths.setText(
-                        response.body().getTodayDeaths().toString());
-
-
+                // bind the data from the API to the views
+                tvCases.setText(response.body().getCases());  // return cases value
+                tvRecovered.setText(response.body().getRecovered());
+                tvCritical.setText(response.body().getCritical());
+                tvActive.setText(response.body().getActive());
+                tvTodayDeaths.setText(response.body().getTodayDeaths());
+                tvTodayCases.setText(response.body().getTodayCases());
             }
 
+            // failure
             @Override
             public void onFailure(Call<Statistics> call, Throwable t) {
                 Log.e("ERROR: ", t.getMessage());
                 Toast.makeText(MainActivity.this, "Fail to get the data.." + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
-    }
-
-
-    private void setComponents() {
-        // Link those objects with their respective id's
-        // that we have given in .XML file
-        tvCases
-                = findViewById(R.id.tvCases);
-        tvTodayCases
-                = findViewById(R.id.tvTodayCases);
-        tvDeaths
-                = findViewById(R.id.tvDeaths);
-        tvCritical
-                = findViewById(R.id.tvCritical);
-        tvActive
-                = findViewById(R.id.tvActive);
-
-        tvTodayDeaths
-                = findViewById(R.id.tvTodayDeaths);
 
     }
 }
